@@ -129,8 +129,21 @@ func runStressTest(q domain.Queue) {
 		return
 	}
 
+	originalLimit := lq.MemoryLimit()
+	appliedLimit := originalLimit
+	if appliedLimit == 0 || appliedLimit > linked.DefaultStressMemoryLimit {
+		appliedLimit = linked.DefaultStressMemoryLimit
+		lq.SetMemoryLimit(appliedLimit)
+	}
+
 	fmt.Println("Запуск стресс-теста: добавляем детали, пока не закончится память...")
+	fmt.Printf("Ограничение памяти для теста: %.1f МБ\n", float64(appliedLimit)/1024.0/1024.0)
 	count, err := lq.FillUntilMemoryExhausted(nil)
+	if originalLimit != 0 && originalLimit != appliedLimit {
+		lq.SetMemoryLimit(originalLimit)
+	}
+	currentLimit := lq.MemoryLimit()
+	fmt.Printf("Текущее ограничение очереди после теста: %.1f МБ\n", float64(currentLimit)/1024.0/1024.0)
 	if err != nil {
 		fmt.Printf("Удалось добавить %d элементов. Остановка из-за ошибки: %v\n", count, err)
 		fmt.Println("Удалите элемент из очереди и повторите попытку добавления, когда освободится память.")
