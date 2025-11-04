@@ -1,6 +1,9 @@
 package linked
 
-import "github.com/AndreSS-ntp/univ_algs/lab1/internal/domain"
+import (
+	"github.com/AndreSS-ntp/univ_algs/lab1/internal/domain"
+	"github.com/AndreSS-ntp/univ_algs/lab1/internal/pkg"
+)
 
 //
 // ===== Реализация №2: Очередь на односвязном списке (связанная память) =====
@@ -15,6 +18,8 @@ type LinkedQueue struct {
 	head, tail *node
 }
 
+const memoryReserve = 500 * 1024 * 1024
+
 var _ domain.Queue = (*LinkedQueue)(nil)
 
 func (q *LinkedQueue) Init() {
@@ -24,6 +29,11 @@ func (q *LinkedQueue) Empty() bool { return q.head == nil }
 func (q *LinkedQueue) Full() bool  { return false }
 
 func (q *LinkedQueue) Enqueue(x domain.ElType) bool {
+	if headroom, err := pkg.MemoryHeadroom(); err == nil {
+		if headroom <= memoryReserve {
+			return false
+		}
+	}
 	n := &node{val: x}
 	if q.tail == nil {
 		q.head, q.tail = n, n

@@ -40,6 +40,7 @@ func main() {
 		fmt.Println("4 — Показать очередь")
 		fmt.Println("5 — Сбросить процесс (инициализация)")
 		fmt.Println("6 — Сменить реализацию очереди")
+		fmt.Println("7 — Заполнить связную очередь до упора по памяти")
 		fmt.Println("0 — Выход")
 		choice := pkg.ReadInt(in, "Ваш выбор: ")
 
@@ -50,6 +51,11 @@ func main() {
 			p := domain.NewPart(code, t)
 			if !q.Enqueue(p) {
 				fmt.Println("Очередь переполнена — нельзя добавить деталь.")
+				if _, ok := q.(*linked.LinkedQueue); ok {
+					if free, err := pkg.MemoryHeadroom(); err == nil {
+						fmt.Printf("Свободно примерно %.2f МБ памяти.\n", float64(free)/1024.0/1024.0)
+					}
+				}
 			} else {
 				fmt.Printf("Деталь %s поставлена в очередь. Требуемое время: %d\n", p.Code, p.StartTime)
 			}
@@ -98,6 +104,37 @@ func main() {
 			q.Init()
 			currentTime = 0
 			fmt.Println("Реализация переключена. Очередь и время сброшены.")
+
+		case 7:
+			lq, ok := q.(*linked.LinkedQueue)
+			if !ok {
+				fmt.Println("Опция доступна только для связной реализации очереди.")
+				break
+			}
+			fmt.Println("Автозаполнение очереди. Нажмите Ctrl+C для экстренной остановки.")
+			added := 0
+			for {
+				part := domain.NewPart(fmt.Sprintf("A%03d", added%1000), 1)
+				if !lq.Enqueue(part) {
+					break
+				}
+				added++
+				if added%10000 == 0 {
+					fmt.Printf("Добавлено %d деталей...\n", added)
+				}
+			}
+			if free, err := pkg.MemoryHeadroom(); err == nil {
+				fmt.Printf("Остановлено после %d деталей. Свободно около %.2f МБ памяти.\n",
+					added, float64(free)/1024.0/1024.0)
+			} else {
+				fmt.Printf("Остановлено после %d деталей из-за ошибки доступа к памяти: %v\n", added, err)
+			}
+			if limit, limited, err := pkg.MemoryLimit(); err == nil && limited {
+				if used, err := pkg.MemoryUsage(); err == nil {
+					fmt.Printf("Использовано %.2f МБ из %.2f МБ допустимых.\n",
+						float64(used)/1024.0/1024.0, float64(limit)/1024.0/1024.0)
+				}
+			}
 
 		case 0:
 			fmt.Println("Завершение работы.")
