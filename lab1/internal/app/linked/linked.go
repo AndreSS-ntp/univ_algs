@@ -17,6 +17,14 @@ type LinkedQueue struct {
 
 var _ domain.Queue = (*LinkedQueue)(nil)
 
+func (q *LinkedQueue) Len() int {
+	count := 0
+	for n := q.head; n != nil; n = n.next {
+		count++
+	}
+	return count
+}
+
 func (q *LinkedQueue) Init() {
 	q.head, q.tail = nil, nil
 }

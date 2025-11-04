@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"os"
 
@@ -16,10 +17,6 @@ import (
 //
 
 func main() {
-	if linked.HandleStressChildMode() {
-		return
-	}
-
 	in := bufio.NewReader(os.Stdin)
 
 	// Выбор реализации
@@ -45,7 +42,7 @@ func main() {
 		fmt.Println("4 — Показать очередь")
 		fmt.Println("5 — Сбросить процесс (инициализация)")
 		fmt.Println("6 — Сменить реализацию очереди")
-		fmt.Println("7 — Стресс-тест: добавлять детали до исчерпания памяти")
+		fmt.Println("7 — Стресс-тест: добавить детали до исчерпания памяти")
 		fmt.Println("0 — Выход")
 		choice := pkg.ReadInt(in, "Ваш выбор: ")
 
@@ -113,9 +110,15 @@ func main() {
 			}
 
 			fmt.Println("Запуск стресс-теста: добавляем детали, пока не закончится память...")
-			if err := linked.TryFillUntilOOM(); err != nil {
-				fmt.Println("Ошибка: out of memory")
-				fmt.Printf("В очереди сейчас %d элементов. Удалите хотя бы одну деталь, чтобы освободить память и попробовать снова.\n", len(linkedQueue.Items()))
+			if err := linked.TryFillUntilOOM(linkedQueue); err != nil {
+				var memErr *linked.MemoryOverflowError
+				if errors.As(err, &memErr) {
+					fmt.Println("Ошибка: закончилась память.")
+					fmt.Printf("В очереди сейчас %d элементов. Удалите хотя бы одну деталь, чтобы освободить память и попробовать снова.\n",
+						linkedQueue.Len())
+				} else {
+					fmt.Printf("Стресс-тест завершился с ошибкой: %v\n", err)
+				}
 				continue
 			}
 
