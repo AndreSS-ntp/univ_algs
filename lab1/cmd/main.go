@@ -40,6 +40,7 @@ func main() {
 		fmt.Println("4 — Показать очередь")
 		fmt.Println("5 — Сбросить процесс (инициализация)")
 		fmt.Println("6 — Сменить реализацию очереди")
+		fmt.Println("7 — Стресс-тест: добавлять детали до исчерпания памяти")
 		fmt.Println("0 — Выход")
 		choice := pkg.ReadInt(in, "Ваш выбор: ")
 
@@ -108,6 +109,9 @@ func main() {
 			currentTime = 0
 			fmt.Println("Реализация переключена. Очередь и время сброшены.")
 
+		case 7:
+			runStressTest(q)
+
 		case 0:
 			fmt.Println("Завершение работы.")
 			return
@@ -116,4 +120,22 @@ func main() {
 			fmt.Println("Нет такого пункта меню.")
 		}
 	}
+}
+
+func runStressTest(q domain.Queue) {
+	lq, ok := q.(*linked.LinkedQueue)
+	if !ok {
+		fmt.Println("Стресс-тест доступен только для очереди на связной памяти.")
+		return
+	}
+
+	fmt.Println("Запуск стресс-теста: добавляем детали, пока не закончится память...")
+	count, err := lq.FillUntilMemoryExhausted(nil)
+	if err != nil {
+		fmt.Printf("Удалось добавить %d элементов. Остановка из-за ошибки: %v\n", count, err)
+		fmt.Println("Удалите элемент из очереди и повторите попытку добавления, когда освободится память.")
+		return
+	}
+
+	fmt.Printf("Добавлено %d элементов без ошибок.\n", count)
 }
