@@ -49,7 +49,16 @@ func main() {
 			t := pkg.ReadPositiveInt(in, "Время обработки (целое > 0): ")
 			p := domain.NewPart(code, t)
 			if !q.Enqueue(p) {
-				fmt.Println("Очередь переполнена — нельзя добавить деталь.")
+				if lq, ok := q.(*linked.LinkedQueue); ok {
+					if err := lq.LastError(); err != nil {
+						fmt.Println("Недостаточно памяти для добавления новой детали.")
+						fmt.Println("Удалите элемент из очереди и повторите попытку.")
+					} else {
+						fmt.Println("Очередь переполнена — нельзя добавить деталь.")
+					}
+				} else {
+					fmt.Println("Очередь переполнена — нельзя добавить деталь.")
+				}
 			} else {
 				fmt.Printf("Деталь %s поставлена в очередь. Требуемое время: %d\n", p.Code, p.StartTime)
 			}
