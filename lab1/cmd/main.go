@@ -3,11 +3,12 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"os"
+
 	"github.com/AndreSS-ntp/univ_algs/lab1/internal/app/linear"
 	"github.com/AndreSS-ntp/univ_algs/lab1/internal/app/linked"
 	"github.com/AndreSS-ntp/univ_algs/lab1/internal/domain"
 	"github.com/AndreSS-ntp/univ_algs/lab1/internal/pkg"
-	"os"
 )
 
 //
@@ -15,6 +16,10 @@ import (
 //
 
 func main() {
+	if linked.HandleStressChildMode() {
+		return
+	}
+
 	in := bufio.NewReader(os.Stdin)
 
 	// Выбор реализации
@@ -50,16 +55,7 @@ func main() {
 			t := pkg.ReadPositiveInt(in, "Время обработки (целое > 0): ")
 			p := domain.NewPart(code, t)
 			if !q.Enqueue(p) {
-				if lq, ok := q.(*linked.LinkedQueue); ok {
-					if err := lq.LastError(); err != nil {
-						fmt.Println("Недостаточно памяти для добавления новой детали.")
-						fmt.Println("Удалите элемент из очереди и повторите попытку.")
-					} else {
-						fmt.Println("Очередь переполнена — нельзя добавить деталь.")
-					}
-				} else {
-					fmt.Println("Очередь переполнена — нельзя добавить деталь.")
-				}
+				fmt.Println("Очередь переполнена — нельзя добавить деталь.")
 			} else {
 				fmt.Printf("Деталь %s поставлена в очередь. Требуемое время: %d\n", p.Code, p.StartTime)
 			}
@@ -110,7 +106,20 @@ func main() {
 			fmt.Println("Реализация переключена. Очередь и время сброшены.")
 
 		case 7:
-			runStressTest(q)
+			linkedQueue, ok := q.(*linked.LinkedQueue)
+			if !ok {
+				fmt.Println("Стресс-тест доступен только для связной реализации очереди.")
+				continue
+			}
+
+			fmt.Println("Запуск стресс-теста: добавляем детали, пока не закончится память...")
+			if err := linked.TryFillUntilOOM(); err != nil {
+				fmt.Println(linked.WrapMemoryError(err))
+				fmt.Printf("В очереди сейчас %d элементов. Удалите хотя бы одну деталь, чтобы освободить память и попробовать снова.\n", len(linkedQueue.Items()))
+				continue
+			}
+
+			fmt.Println("Стресс-тест завершён без ошибок.")
 
 		case 0:
 			fmt.Println("Завершение работы.")
@@ -120,35 +129,4 @@ func main() {
 			fmt.Println("Нет такого пункта меню.")
 		}
 	}
-}
-
-func runStressTest(q domain.Queue) {
-	lq, ok := q.(*linked.LinkedQueue)
-	if !ok {
-		fmt.Println("Стресс-тест доступен только для очереди на связной памяти.")
-		return
-	}
-
-	originalLimit := lq.MemoryLimit()
-	appliedLimit := originalLimit
-	if appliedLimit == 0 || appliedLimit > linked.DefaultStressMemoryLimit {
-		appliedLimit = linked.DefaultStressMemoryLimit
-		lq.SetMemoryLimit(appliedLimit)
-	}
-
-	fmt.Println("Запуск стресс-теста: добавляем детали, пока не закончится память...")
-	fmt.Printf("Ограничение памяти для теста: %.1f МБ\n", float64(appliedLimit)/1024.0/1024.0)
-	count, err := lq.FillUntilMemoryExhausted(nil)
-	if originalLimit != 0 && originalLimit != appliedLimit {
-		lq.SetMemoryLimit(originalLimit)
-	}
-	currentLimit := lq.MemoryLimit()
-	fmt.Printf("Текущее ограничение очереди после теста: %.1f МБ\n", float64(currentLimit)/1024.0/1024.0)
-	if err != nil {
-		fmt.Printf("Удалось добавить %d элементов. Остановка из-за ошибки: %v\n", count, err)
-		fmt.Println("Удалите элемент из очереди и повторите попытку добавления, когда освободится память.")
-		return
-	}
-
-	fmt.Printf("Добавлено %d элементов без ошибок.\n", count)
 }
