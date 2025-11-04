@@ -2,7 +2,6 @@ package linked
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -96,16 +95,4 @@ func runAllocationLoop() {
 			fmt.Fprintln(os.Stderr, "stress child: продолжаем заполнять очередь...")
 		}
 	}
-}
-
-// WrapMemoryError помогает красиво вывести сообщение пользователю.
-func WrapMemoryError(err error) error {
-	var memErr *MemoryOverflowError
-	if errors.As(err, &memErr) {
-		if memErr.Log == "" {
-			return errors.New("память закончилась во время стресс-теста")
-		}
-		return fmt.Errorf("память закончилась во время стресс-теста:\n%s", memErr.Log)
-	}
-	return err
 }

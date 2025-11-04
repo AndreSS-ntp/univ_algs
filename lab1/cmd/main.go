@@ -114,7 +114,7 @@ func main() {
 
 			fmt.Println("Запуск стресс-теста: добавляем детали, пока не закончится память...")
 			if err := linked.TryFillUntilOOM(); err != nil {
-				fmt.Println(linked.WrapMemoryError(err))
+				fmt.Println("Ошибка: out of memory")
 				fmt.Printf("В очереди сейчас %d элементов. Удалите хотя бы одну деталь, чтобы освободить память и попробовать снова.\n", len(linkedQueue.Items()))
 				continue
 			}
