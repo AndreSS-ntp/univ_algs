@@ -5,10 +5,6 @@ import (
 	"github.com/AndreSS-ntp/univ_algs/lab1/internal/pkg"
 )
 
-//
-// ===== Реализация №2: Очередь на односвязном списке (связанная память) =====
-//
-
 type node struct {
 	val  domain.ElType
 	next *node
