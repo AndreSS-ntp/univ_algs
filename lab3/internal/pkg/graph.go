@@ -2,90 +2,82 @@ package pkg
 
 import "fmt"
 
-// Graph - ориентированный граф в виде списка смежности.
 type Graph struct {
-	vertices []rune          // метки вершин
-	adj      map[rune][]rune // список смежности: из вершины -> список вершин
+	vertices []rune
+	adj      [][]rune
 }
 
-// NewGraph создаёт пустой граф.
 func NewGraph() *Graph {
-	return &Graph{
-		adj: make(map[rune][]rune),
-	}
+	return &Graph{}
 }
 
-// AddVertex добавляет вершину с заданной меткой.
-// Возвращает false, если вершина уже есть.
+func (g *Graph) findVertexIndex(v rune) int {
+	for i, label := range g.vertices {
+		if label == v {
+			return i
+		}
+	}
+	return -1
+}
+
 func (g *Graph) AddVertex(v rune) bool {
-	if _, ok := g.adj[v]; ok {
+	if g.findVertexIndex(v) != -1 {
 		return false
 	}
 	g.vertices = append(g.vertices, v)
-	g.adj[v] = []rune{}
+	g.adj = append(g.adj, []rune{})
 	return true
 }
 
-// AddEdge добавляет ориентированное ребро from -> to.
 func (g *Graph) AddEdge(from, to rune) error {
-	if _, ok := g.adj[from]; !ok {
+	fromIdx := g.findVertexIndex(from)
+	if fromIdx == -1 {
 		return fmt.Errorf("вершина %c не существует", from)
 	}
-	if _, ok := g.adj[to]; !ok {
+	if g.findVertexIndex(to) == -1 {
 		return fmt.Errorf("вершина %c не существует", to)
 	}
-	// проверяем, нет ли уже такого ребра
-	for _, v := range g.adj[from] {
+
+	for _, v := range g.adj[fromIdx] {
 		if v == to {
-			return nil // уже есть
+			return nil
 		}
 	}
-	g.adj[from] = append(g.adj[from], to)
+
+	g.adj[fromIdx] = append(g.adj[fromIdx], to)
 	return nil
 }
 
-// RemoveVertex удаляет вершину и все инцидентные ей рёбра.
 func (g *Graph) RemoveVertex(v rune) bool {
-	if _, ok := g.adj[v]; !ok {
+	idx := g.findVertexIndex(v)
+	if idx == -1 {
 		return false
 	}
 
-	// убираем из списка вершин
-	idx := -1
-	for i, x := range g.vertices {
-		if x == v {
-			idx = i
-			break
-		}
-	}
-	if idx >= 0 {
-		g.vertices = append(g.vertices[:idx], g.vertices[idx+1:]...)
-	}
+	g.vertices = append(g.vertices[:idx], g.vertices[idx+1:]...)
 
-	// удаляем все исходящие рёбра
-	delete(g.adj, v)
+	g.adj = append(g.adj[:idx], g.adj[idx+1:]...)
 
-	// удаляем все входящие рёбра
-	for from, list := range g.adj {
+	for i := range g.adj {
+		list := g.adj[i]
 		newList := make([]rune, 0, len(list))
 		for _, to := range list {
 			if to != v {
 				newList = append(newList, to)
 			}
 		}
-		g.adj[from] = newList
+		g.adj[i] = newList
 	}
 
 	return true
 }
 
-// HasEdge проверяет наличие ребра from -> to.
 func (g *Graph) HasEdge(from, to rune) bool {
-	list, ok := g.adj[from]
-	if !ok {
+	fromIdx := g.findVertexIndex(from)
+	if fromIdx == -1 {
 		return false
 	}
-	for _, v := range list {
+	for _, v := range g.adj[fromIdx] {
 		if v == to {
 			return true
 		}
@@ -93,12 +85,11 @@ func (g *Graph) HasEdge(from, to rune) bool {
 	return false
 }
 
-// Print выводит граф в виде списка смежности.
 func (g *Graph) Print() {
 	fmt.Println("Список смежности (ориентированный граф):")
-	for _, v := range g.vertices {
+	for i, v := range g.vertices {
 		fmt.Printf("%c: ", v)
-		for _, to := range g.adj[v] {
+		for _, to := range g.adj[i] {
 			fmt.Printf("%c ", to)
 		}
 		fmt.Println()

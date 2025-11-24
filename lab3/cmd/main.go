@@ -30,6 +30,7 @@ func main() {
 		fmt.Println("3 - Удалить вершину")
 		fmt.Println("4 - Поиск ребра между двумя вершинами")
 		fmt.Println("5 - Выход")
+		fmt.Println("6 - Добавить дугу")
 		fmt.Print("Ваш выбор: ")
 
 		choiceLine, err := reader.ReadString('\n')
@@ -102,6 +103,30 @@ func main() {
 		case "5":
 			fmt.Println("Выход из программы.")
 			return
+
+		case "6":
+			fmt.Print("Введите букву из какой вершины построить дугу: ")
+			v, err := repository.ReadRune(reader)
+			if err != nil {
+				fmt.Println("Ошибка:", err)
+				continue
+			}
+			if !g.AddVertex(v) {
+				fmt.Println("Введите через пробел вершины, в которые идут дуги из новой вершины (пустая строка — без дуг):")
+				line, _ := reader.ReadString('\n')
+				line = strings.TrimSpace(line)
+				if line != "" {
+					for _, token := range strings.Fields(line) {
+						r := []rune(token)[0]
+						if err := g.AddEdge(v, r); err != nil {
+							fmt.Println("Ошибка добавления дуги:", err)
+						}
+					}
+				}
+				continue
+			} else {
+				fmt.Println("Такой вершины TO - нет, добавление ребра невозможно.")
+			}
 
 		default:
 			fmt.Println("Неизвестная команда.")

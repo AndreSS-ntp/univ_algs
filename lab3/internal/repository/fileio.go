@@ -8,11 +8,6 @@ import (
 	"strings"
 )
 
-// LoadFromFile загружает граф из файла с матрицей смежности.
-// Формат файла:
-// n
-// v1 v2 ... vn
-// матрица n x n (0/1)
 func LoadFromFile(path string) (*pkg.Graph, error) {
 	file, err := os.Open(path)
 	if err != nil {
@@ -28,7 +23,6 @@ func LoadFromFile(path string) (*pkg.Graph, error) {
 	g := pkg.NewGraph()
 	labels := make([]rune, n)
 
-	// читаем метки вершин
 	for i := 0; i < n; i++ {
 		var s string
 		if _, err := fmt.Fscan(file, &s); err != nil {
@@ -42,7 +36,6 @@ func LoadFromFile(path string) (*pkg.Graph, error) {
 		g.AddVertex(r)
 	}
 
-	// читаем матрицу смежности
 	for i := 0; i < n; i++ {
 		for j := 0; j < n; j++ {
 			var val int
@@ -60,7 +53,6 @@ func LoadFromFile(path string) (*pkg.Graph, error) {
 	return g, nil
 }
 
-// readRune читает одну букву (rune) из stdin.
 func ReadRune(reader *bufio.Reader) (rune, error) {
 	line, err := reader.ReadString('\n')
 	if err != nil {
