@@ -13,7 +13,7 @@ func main() {
 	keys, p, q := repository.GetLabData()
 
 	fmt.Println("Ключи:", keys)
-	fmt.Println("p[i]:", p[1:]) // p[0] не используем
+	fmt.Println("p[i]:", p[1:])
 	fmt.Println("q[i]:", q)
 
 	// 1. Полностью сбалансированное дерево

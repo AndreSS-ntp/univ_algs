@@ -2,12 +2,9 @@ package optimal
 
 import "github.com/AndreSS-ntp/univ_algs/lab5/internal/domain"
 
-// BuildOptimal строит оптимальное дерево поиска по массивам keys, p, q.
-// Возвращает корень дерева и минимальную цену поиска C(1, N).
 func BuildOptimal(keys []int, p []int, q []int) (*domain.Node, int) {
-	n := len(keys) // N
+	n := len(keys)
 
-	// Матрицы w, c, r размером (n+1) x (n+1), индексация i,j: 0..N
 	w := make([][]int, n+1)
 	c := make([][]int, n+1)
 	r := make([][]int, n+1)
@@ -19,19 +16,16 @@ func BuildOptimal(keys []int, p []int, q []int) (*domain.Node, int) {
 
 	// Базовые случаи
 	for i := 0; i <= n; i++ {
-		w[i][i] = q[i] // только один абстрактный узел
+		w[i][i] = q[i]
 		c[i][i] = 0
 	}
 
-	// length = j - i, количество ключей в поддереве
 	for length := 1; length <= n; length++ {
 		for i := 0; i <= n-length; i++ {
 			j := i + length
 
-			// считаем W(i, j)
 			w[i][j] = w[i][j-1] + p[j] + q[j]
 
-			// ищем минимум по k
 			bestCost := int(1e9)
 			bestK := i + 1
 			for k := i + 1; k <= j; k++ {
@@ -51,14 +45,13 @@ func BuildOptimal(keys []int, p []int, q []int) (*domain.Node, int) {
 	return root, c[0][n]
 }
 
-// Реконструкция дерева по матрице R(i,j)
 func buildOptimalTreeFromRoots(keys []int, r [][]int, i, j int) *domain.Node {
 	if i == j {
-		return nil // пустое поддерево
+		return nil
 	}
 
-	k := r[i][j]     // индекс корня в терминах p/q (1..N)
-	key := keys[k-1] // keys индексация с 0
+	k := r[i][j]
+	key := keys[k-1]
 	root := domain.NewNode(key)
 
 	root.Left = buildOptimalTreeFromRoots(keys, r, i, k-1)

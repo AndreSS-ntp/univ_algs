@@ -77,9 +77,10 @@ func PreorderPrint(root *BinaryTree) {
 		return
 	}
 
-	fmt.Printf("%d ", root.Key)
+	//fmt.Printf("%d ", root.Key)
 	PreorderPrint(root.LeftTree)
 	PreorderPrint(root.RightTree)
+	fmt.Printf("%d ", root.Key)
 }
 
 func FindUnbalancedNodes(root *BinaryTree) []int {
